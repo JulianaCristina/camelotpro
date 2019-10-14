@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
-import math
-import time
-
 from .helpers import *
+from ExtractTable import ExtractTable
+
+API_KEY = ""
+
+
+def check_usage(api_key):
+    return ExtractTable(api_key).check_usage()
 
 
 def read_pdf(
         filepath,
-        pages="1",
-        password=None,
-        flavor="lattice",
-        suppress_stdout=False,
-        layout_kwargs={},
-        pro_kwargs=None,
+        pages: str = "1",
+        password: str = '',
+        flavor: str = "camelotPro",
+        suppress_stdout: bool = False,
+        layout_kwargs: dict = None,
+        pro_kwargs: dict = None,
         **kwargs
 ):
     """
@@ -39,7 +43,7 @@ def read_pdf(
                 "dup_check": bool, default: False - to bypass the duplicate check
                     Useful to handle duplicate requests, check based on the FileName
 
-                "wait_for_output": bool, default: True
+                "max_wait_time": int, default: 300
                     Loops and check for the output for a maximum of 300 seconds, before the process exits as an output.
                     with 20 second gap in between retries
                         - If the process will return the output before 300 seconds, when the processing is successful
@@ -55,26 +59,18 @@ def read_pdf(
         pro_kwargs = {}
     flavor = flavor.lower()
     if flavor == "camelotpro":
-        from camelot_pro.gopro import GoPro
+        from .handlers import PDFSpliter
         from camelot_pro.doppelganger import table_list
-        going_pro = GoPro(pro_kwargs.get("api_key", ""))
-        gone_pro = going_pro.validate_api_key()
+
+        et_sess = ExtractTable(api_key=pro_kwargs["api_key"] if pro_kwargs.get("api_key", "") else API_KEY)
+        max_wait_time = int(pro_kwargs.get("max_wait_time", 300))
         if not pro_kwargs.get("job_id", ""):
-            gp_resp = gone_pro.trigger(filepath, pages, password=password, dup_check=pro_kwargs.get("dup_check", False))
+            with PDFSpliter(filepath, pages, password) as pdf_obj:
+                et_sess.process_file(pdf_obj.filepath, dup_check=pro_kwargs.get("dup_check", ""), max_wait_time=max_wait_time)
         else:
-            gp_resp = gone_pro.get_tables(pro_kwargs["job_id"])
+            et_sess.get_result(pro_kwargs["job_id"], max_wait_time=max_wait_time)
 
-        # Added default wait time, because early users are confused of no output
-        pro_kwargs["wait_for_output"] = pro_kwargs.get("wait_for_output", True)
-
-        if gp_resp["JobStatus"].lower().startswith("process") and pro_kwargs["wait_for_output"]:
-            max_wait = 300
-            check_freq = 20
-            while max_wait > 0 and gp_resp["JobStatus"].lower().startswith("process"):
-                print(f'[Info]: Please wait, the Job is: {gp_resp["JobStatus"]} ..')
-                max_wait -= check_freq
-                time.sleep(check_freq)
-                gp_resp = gone_pro.get_tables(job_id=gp_resp["JobId"])
+        gp_resp = et_sess.ServerResponse.json()
         tables = table_list(gp_resp)
     else:
         from camelot.io import read_pdf

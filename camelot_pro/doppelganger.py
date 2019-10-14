@@ -38,7 +38,7 @@ class Table(object):
 
     def __init__(self, pro_table):
         self.flavor = "CamelotPro"
-        self.df = pd.DataFrame.from_dict({int(k): v for k, v in pro_table["TableJson"].items()}, orient="index")
+        self.df = pd.DataFrame.from_dict(pro_table["TableJson"]).T
         self.rows, self.cols = self.shape = self.df.shape
         self.cells = self.df.size
         self.accuracy = self.accuracy_layout = round(pro_table["LayoutConfidence"], 2)

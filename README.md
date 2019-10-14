@@ -1,7 +1,7 @@
 [![image](https://i.imgur.com/YIHmXue.png?1)](https://extracttable.com?ref=github-CP)
 
 # CamelotPro: Pro-version of Camelot  
-**Latest verions: 0.7.4** [![image](https://img.shields.io/github/license/extracttable/camelotpro)]() [![image](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue)]()  
+**Latest verions: 1.0.0** [![image](https://img.shields.io/github/license/extracttable/camelotpro)]() [![image](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue)]()  
   
 **CamelotPro** is a layer on camelot-py library to extract tables from **Scan PDFs and Images**. 
 
@@ -44,13 +44,16 @@ The developer needs an **api_key** ([free credits here](https://extracttable.com
 
     {
         "api_key": str,
-            Mandatory, to trigger "CamelotPro" flavor, to process Scan PDFs and images, also text PDF files
+        Mandatory, to trigger "CamelotPro" flavor, to process Scan PDFs and images, also text PDF files
+    
         "job_id": str,
             optional, if processing a new file
-            Mandatory, to retrieve the result of the already submitted file
-        "dup_check": bool, default: False
+            Mandatory, to retrieve the result of already submitted file
+    
+        "dup_check": bool, default: False - to bypass the duplicate check
             Useful to handle duplicate requests, check based on the FileName
-        "wait_for_output": bool, default: True
+    
+        "max_wait_time": int, default: 300
             Loops and check for the output for a maximum of 300 seconds, before the process exits as an output.
             with 20 second gap in between retries
                 - If the process will return the output before 300 seconds, when the processing is successful
@@ -61,6 +64,15 @@ The developer needs an **api_key** ([free credits here](https://extracttable.com
 
 ## Let's code
 
+**Quickly validate the API key and see number of credits attached to it**
+```python
+api_key = YOUR_API_KEY_HERE
+
+from camelot_pro import check_usage
+print(check_usage(api_key))
+```
+*No error from the above code snippet run implies API Key is valid*
+
 
 **Here's how you can extract tables from Image files.** 
 
@@ -68,7 +80,6 @@ The developer needs an **api_key** ([free credits here](https://extracttable.com
 The example image (*foo_image.**jpg***)  used in the code below, can be found [here](https://github.com/extracttable/camelotpro/blob/master/samples/foo-image.jpg).  Notice that *foo_image.jpg* is the image version of Camelot's example, [foo.pdf](https://github.com/camelot-dev/camelot/blob/master/docs/_static/pdf/foo.pdf).
   
     from camelot_pro import read_pdf
-    api_key = "YOUR_API_KEY_HERE"
     pro_tables = read_pdf('foo-image.jpg', flavor="CamelotPro", pro_kwargs={'api_key': api_key, 'dup_check': False})  
 
 

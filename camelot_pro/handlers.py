@@ -5,6 +5,9 @@ import tempfile
 import PyPDF2
 from camelot.handlers import PDFHandler
 
+# TODO : Limit the file
+# TODO: Make it easy to check the credits
+
 
 class PDFSpliter:
     """
