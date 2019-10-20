@@ -50,22 +50,33 @@ def read_pdf(
     -------
     tables : camelot.core.TableList
     """
+    pro_flavors = tuple(["camelotpro", "camelot_pro", "pro"])
+
     if pro_kwargs is None:
         pro_kwargs = {}
+
     flavor = flavor.lower()
-    if flavor == "camelotpro":
-        from .handlers import PDFSpliter
-        from camelot_pro.doppelganger import table_list
+    if flavor in pro_flavors or any([kwa.lower() in pro_flavors for kwa in kwargs]):
+        if kwargs.pop("password", ""):
+            raise IOError("Pro version does not support the password protected files")
+
+        max_wait_time = int(pro_kwargs.pop("max_wait_time", 300))
+        dup_check = pro_kwargs.pop("dup_check", False)
 
         et_sess = ExtractTable(api_key=pro_kwargs["api_key"])
-        max_wait_time = int(pro_kwargs.get("max_wait_time", 300))
         if not pro_kwargs.get("job_id", ""):
-            with PDFSpliter(filepath, pages, password) as pdf_obj:
-                et_sess.process_file(pdf_obj.filepath, dup_check=pro_kwargs.get("dup_check", ""), max_wait_time=max_wait_time)
+            et_sess.process_file(
+                filepath,
+                output_format="df",
+                dup_check=dup_check,
+                max_wait_time=max_wait_time,
+                pages=kwargs.pop("pages", "1")
+            )
         else:
             et_sess.get_result(pro_kwargs["job_id"], max_wait_time=max_wait_time)
 
         gp_resp = et_sess.ServerResponse.json()
+        from camelot_pro.doppelganger import table_list
         tables = table_list(gp_resp)
     else:
         from camelot.io import read_pdf
