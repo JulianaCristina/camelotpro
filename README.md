@@ -1,7 +1,7 @@
 [![image](https://i.imgur.com/YIHmXue.png?1)](https://extracttable.com?ref=github-CP)
 
 # CamelotPro: Pro-version of Camelot  
-**Latest verions: 1.0.0** [![image](https://img.shields.io/github/license/extracttable/camelotpro)]() [![image](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue)]()  
+[![image](https://img.shields.io/pypi/v/camelotpro.svg?maxAge=3600)](https://pypi.org/project/camelotpro/) [![image](https://img.shields.io/github/license/extracttable/camelotpro)]() [![image](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue)]()  
   
 **CamelotPro** is a layer on camelot-py library to extract tables from **Scan PDFs and Images**. 
 
@@ -29,12 +29,6 @@ After  for Camelot, you can simply use pip to install CamelotPro:
   
     $ pip install -U CamelotPro  
 
-or  
-  
-### From the source code  
-  
-    $ git clone https://www.github.com/extracttable/camelotpro.git
-
 
 ## Prerequisites
 
@@ -48,16 +42,13 @@ The developer needs an **api_key** ([free credits here](https://extracttable.com
     
         "job_id": str,
             optional, if processing a new file
-            Mandatory, to retrieve the result of already submitted file
+            Mandatory, to retrieve the result of the already submitted file
     
         "dup_check": bool, default: False - to bypass the duplicate check
             Useful to handle duplicate requests, check based on the FileName
     
         "max_wait_time": int, default: 300
-            Loops and check for the output for a maximum of 300 seconds, before the process exits as an output.
-            with 20 second gap in between retries
-                - If the process will return the output before 300 seconds, when the processing is successful
-                - Alternatively, a big file process can always be tracked using the ".JobId" from the output
+            Checks for the output every 15 seconds until successfully processed or for a maximum of 300 seconds.
     }
 
 
@@ -78,9 +69,11 @@ print(check_usage(api_key))
 
 
 The example image (*foo_image.**jpg***)  used in the code below, can be found [here](https://github.com/extracttable/camelotpro/blob/master/samples/foo-image.jpg).  Notice that *foo_image.jpg* is the image version of Camelot's example, [foo.pdf](https://github.com/camelot-dev/camelot/blob/master/docs/_static/pdf/foo.pdf).
-  
-    from camelot_pro import read_pdf
-    pro_tables = read_pdf('foo-image.jpg', flavor="CamelotPro", pro_kwargs={'api_key': api_key, 'dup_check': False})  
+
+```python
+from camelot_pro import read_pdf
+pro_tables = read_pdf('foo-image.jpg', flavor="CamelotPro", pro_kwargs={'api_key': api_key})  
+```  
 
 
 Now that you have triggered the process to find tables from the image, you can find the status of it from the  `JobStatus` attribute, which returns any of *Success, Failed, Processing, Incomplete*.
@@ -88,11 +81,42 @@ Now that you have triggered the process to find tables from the image, you can f
     pro_tables.JobStatus
     [Out]: "Success"
 
+    pro_tables[0].df                  # get a pandas DataFrame!  
 
-If the `JobStatus` status is "Success", just like Camelot, the output gives the gist of the process.
+  
+| Col_1 | Col_2 | Col_3 | Col_4 | Col_5 | Col_6 | Col_7 |
+|------------|-----------|---------------|----------------------|-----------------|-----------------|----------------|
+| Cycle Name | KI (1/km) | Distance (mi) | Percent Fuel Savings |                 |                 |                |
+|            |           |               | Improved Speed       | Decreased Accel | Eliminate Stops | Decreased Idle |
+| 2012_2     | 3.30      | 1.3           | 5.9%                 | 9.5%            | 29.2%           | 17.4%          |
+| 2145_1     | 0.68      | 11.2          | 2.4%                 | 0.1%            | 9.5%            | 2.7%           |
+| 4234_1     | 0.59      | 58.7          | 8.5%                 | 1.3%            | 8.5%            | 3.3%           |
+| 2032_2     | 0.17      | 57.8          | 21.7%                | 0.3%            | 2.7%            | 1.2%           |
+| 4171_1     | 0.07      | 173.9         | 58.1%                | 1.6%            | 2.1%            | 0.5%           |
+
+
+When the `JobStatus` status is "Success", just like Camelot, the output gives the gist of the process.
 
     pro_tables
     [Out]: <TableList n=1>                                # Will be <TableList n=0> for any other JobStatus
+    pro_tables[0].df                  # get a pandas DataFrame!
+
+... and then there are the regular Camelot functions and attributes
+
+    pro_tables.export('foo.csv', f='csv', )         # json, excel, html, sqlite  
+    
+    pro_tables[0]
+    [Out]: <Table shape=(7, 7)>
+    
+    pro_tables[0].parsing_report  
+    [Out]: {  
+        'accuracy': 75.12,  
+        'whitespace': 0.86,  
+        'order': 1,  
+        'page': 1  
+    }
+    
+    pro_tables[0].to_csv('foo.csv')             # to_json, to_excel, to_html, to_sqlite  
 
    
 >***ProTip**: Very useful to check out all attributes of the output, when the `JobStatus` is **not "Success"**.
@@ -128,39 +152,6 @@ Most of the image file processes result in an instant 'Success' job status, at t
     instant_pro_tables = read_pdf('foo-image.jpg', flavor="CamelotPro", pro_kwargs={'api_key': api_key, 'dup_check': False})
 
 
-... and then there are the regular Camelot functions and attributes
-
-
-    pro_tables.export('foo.csv', f='csv', )         # json, excel, html, sqlite  
-    
-    pro_tables[0]
-    [Out]: <Table shape=(7, 7)>
-    
-    pro_tables[0].parsing_report  
-    [Out]: {  
-        'accuracy': 75.12,  
-        'whitespace': 0.86,  
-        'order': 1,  
-        'page': 1  
-    }
-    
-    pro_tables[0].to_csv('foo.csv')             # to_json, to_excel, to_html, to_sqlite  
-    
-    pro_tables[0].df                  # get a pandas DataFrame!  
-
-
-  
-| Col_1 | Col_2 | Col_3 | Col_4 | Col_5 | Col_6 | Col_7 |
-|------------|-----------|---------------|----------------------|-----------------|-----------------|----------------|
-| Cycle Name | KI (1/km) | Distance (mi) | Percent Fuel Savings |                 |                 |                |
-|            |           |               | Improved Speed       | Decreased Accel | Eliminate Stops | Decreased Idle |
-| 2012_2     | 3.30      | 1.3           | 5.9%                 | 9.5%            | 29.2%           | 17.4%          |
-| 2145_1     | 0.68      | 11.2          | 2.4%                 | 0.1%            | 9.5%            | 2.7%           |
-| 4234_1     | 0.59      | 58.7          | 8.5%                 | 1.3%            | 8.5%            | 3.3%           |
-| 2032_2     | 0.17      | 57.8          | 21.7%                | 0.3%            | 2.7%            | 1.2%           |
-| 4171_1     | 0.07      | 173.9         | 58.1%                | 1.6%            | 2.1%            | 0.5%           |
-
-
 ## New and Re-defined Attributes of CamelotPro
 
 
@@ -190,3 +181,10 @@ This project is licensed under the GNU-3.0 License, see the [LICENSE](https://gi
 ## Credits
 
 Last but not least, we want to be thankful to the contributors of [camelot-py](https://github.com/atlanhq/camelot/)
+
+# Social Media
+Follow us on Social media for library updates and free credits.
+
+[![Image](https://cdn3.iconfinder.com/data/icons/socialnetworking/32/linkedin.png)](https://www.linkedin.com/company/extracttable)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![Image](https://abs.twimg.com/favicons/twitter.ico)](https://twitter.com/extracttable)

@@ -2,8 +2,6 @@
 from .helpers import *
 from ExtractTable import ExtractTable
 
-API_KEY = ""
-
 
 def check_usage(api_key):
     return ExtractTable(api_key).check_usage()
@@ -14,9 +12,9 @@ def read_pdf(
         pages: str = "1",
         password: str = '',
         flavor: str = "camelotPro",
+        pro_kwargs: dict = None,
         suppress_stdout: bool = False,
         layout_kwargs: dict = None,
-        pro_kwargs: dict = None,
         **kwargs
 ):
     """
@@ -37,17 +35,14 @@ def read_pdf(
                 Mandatory, to trigger "CamelotPro" flavor, to process Scan PDFs and images, also text PDF files
 
                 "job_id": str,
-                    optional, if processing a new file
-                    Mandatory, to retrieve the result of already submitted file
+                    empty, to process a new file
+                    Mandatory, to retrieve the result of the already submitted file
 
                 "dup_check": bool, default: False - to bypass the duplicate check
                     Useful to handle duplicate requests, check based on the FileName
 
                 "max_wait_time": int, default: 300
-                    Loops and check for the output for a maximum of 300 seconds, before the process exits as an output.
-                    with 20 second gap in between retries
-                        - If the process will return the output before 300 seconds, when the processing is successful
-                        - Alternatively, a big file process can always be tracked using the ".JobId" from the output
+                    Checks for the output every 15 seconds until successfully processed or for a maximum of 300 seconds.
             }
         )
 
@@ -62,7 +57,7 @@ def read_pdf(
         from .handlers import PDFSpliter
         from camelot_pro.doppelganger import table_list
 
-        et_sess = ExtractTable(api_key=pro_kwargs["api_key"] if pro_kwargs.get("api_key", "") else API_KEY)
+        et_sess = ExtractTable(api_key=pro_kwargs["api_key"])
         max_wait_time = int(pro_kwargs.get("max_wait_time", 300))
         if not pro_kwargs.get("job_id", ""):
             with PDFSpliter(filepath, pages, password) as pdf_obj:
@@ -80,7 +75,7 @@ def read_pdf(
             password=password,
             flavor=flavor,
             suppress_stdout=suppress_stdout,
-            layout_kwargs=layout_kwargs,
+            layout_kwargs=layout_kwargs if layout_kwargs else {},
             **kwargs
         )
         if not tables:

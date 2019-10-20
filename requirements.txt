@@ -1,5 +1,3 @@
 ExtractTable
 camelot-py>=0.7.3
-pandas
 PyPDF2
-requests
