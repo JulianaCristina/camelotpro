@@ -72,7 +72,9 @@ The example image (*foo_image.**jpg***)  used in the code below, can be found [h
 
 ```python
 from camelot_pro import read_pdf
-pro_tables = read_pdf('foo-image.jpg', flavor="CamelotPro", pro_kwargs={'api_key': api_key})  
+pro_tables = read_pdf('foo-image.jpg', flavor="CamelotPro", pro_kwargs={'api_key': api_key})
+# To process PDF, make use of pages ("1", "1,3-4", "all") params in the read_pdf function
+# pro_tables = read_pdf('foo-image.PDF', flavor="CamelotPro", pages="1,3-4", pro_kwargs={'api_key': api_key})
 ```  
 
 
