@@ -67,10 +67,11 @@ def read_pdf(
         if not pro_kwargs.get("job_id", ""):
             et_sess.process_file(
                 filepath,
+                pages=pages,
                 output_format="df",
                 dup_check=dup_check,
                 max_wait_time=max_wait_time,
-                pages=kwargs.pop("pages", "1")
+                library="camelotpro"
             )
         else:
             et_sess.get_result(pro_kwargs["job_id"], max_wait_time=max_wait_time)
